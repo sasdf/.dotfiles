@@ -1,0 +1,40 @@
+# This file should contain aliases, shell variables, and functions,
+# those cannot be passed to child process.
+#
+# Ref to .profile for details
+#
+
+
+# .-----------------------------.
+# | Check machine dependent env |
+# '-----------------------------'
+
+if [ -z "$DOTS" ] || [ -z "$DOTSLO" ]; then
+    echo '[FATAL] $DOTS or $DOTSLO is not defined, please set them in $HOME/.dots' >&2
+    return 255
+fi
+
+
+# .-----------------.
+# | Loading plugins |
+# '-----------------'
+
+source "$DOTS/sh/shrc.d/home.sh"       || echo '[WARN] Unable to load home plugin'
+source "$DOTS/sh/shrc.d/tty.sh"        || echo '[WARN] Unable to load tty plugin'
+source "$DOTS/sh/shrc.d/alias.sh"      || echo '[WARN] Unable to load alias plugin'
+
+if [ -z "$SOURCE_FROM_ZSH" ]; then
+    source "$DOTS/sh/shrc.d/prompt.sh" || echo '[WARN] Unable to load prompt plugin'
+fi
+
+source "$DOTS/sh/shrc.d/tmux.sh"       || echo '[WARN] Unable to load tmux plugin'
+source "$DOTS/sh/shrc.d/autols.sh"     || echo '[WARN] Unable to load autols plugin'
+
+
+# .---------------------.
+# | Load local settings |
+# '---------------------'
+
+if [ -f "$DOTSLO/sh/shrc" ]; then
+    source "$DOTSLO/sh/shrc" || return $?
+fi

@@ -1,0 +1,41 @@
+# .----------------------------.
+# | Load machine dependent env |
+# '----------------------------'
+
+if [ -z "$DOTSENV" ]; then
+    source "$HOME/.dots"
+else
+    source "$DOTSENV"
+fi
+
+if [ "$?" -ne "0" ]; then
+    echo '[FATAL] Unable to load $HOME/.dots' >&2
+    return 255
+fi
+
+if [ -z "$DOTS" ] || [ -z "$DOTSLO" ]; then
+    echo '[FATAL] $DOTS or $DOTSLO is not defined, please set them in $HOME/.dots' >&2
+    return 255
+fi
+
+
+# .------------------------------.
+# | Load common settings from sh |
+# '------------------------------'
+
+export SOURCE_FROM_ZSH=1
+emulate sh -c "source $DOTS/sh/profile"
+ret="$?"
+unset SOURCE_FROM_ZSH
+if [ "$ret" -ne "0" ]; then
+    return "$ret"
+fi
+
+
+# .---------------------.
+# | Load local settings |
+# '---------------------'
+
+if [ -f "$DOTSLO/zsh/zprofile" ]; then
+    source "$DOTSLO/zsh/zprofile" || return $?
+fi

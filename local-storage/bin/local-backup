@@ -1,0 +1,14 @@
+#!/bin/bash
+
+printf '%s' "Backup local directory? [yes/No] "
+read ans
+if [ "$ans" != "yes" ]
+then
+    echo "    Skipped"
+    exit 1
+fi
+
+filename="$(realpath "$DOTS_PATH_LOCAL/../local-$(date +%Y.%m.%d-%H.%M.%S.tgz)")"
+echo "Backup to $filename"
+cd "$DOTS_PATH_LOCAL" && \
+tar -cf - . | pigz -9 -p 16 > "$filename"

@@ -1,0 +1,13 @@
+# .------------------.
+# | List tmux/screen |
+# '------------------'
+
+if [ "$(screen -ls | wc -l)" -gt 2 ]; then
+    echo ""
+    echo "There're screens detached! please use 'screen -r'."
+    echo ""
+fi
+
+tmux ls 2>/dev/null
+
+return 0

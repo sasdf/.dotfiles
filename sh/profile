@@ -1,0 +1,78 @@
+# profile for sh/bash
+
+
+# .----------------------------.
+# | Load machine dependent env |
+# '----------------------------'
+
+if [ -z "$DOTSENV" ]; then
+    source "$HOME/.dots"
+else
+    source "$DOTSENV"
+fi
+
+if [ "$?" -ne "0" ]; then
+    echo '[FATAL] Unable to load $HOME/.dots' >&2
+    return 255
+fi
+
+if [ -z "$DOTS" ] || [ -z "$DOTSLO" ]; then
+    echo '[FATAL] $DOTS or $DOTSLO is not defined, please set them in $HOME/.dots' >&2
+    return 255
+fi
+
+
+# .--------------.
+# | Load plugins |
+# '--------------'
+
+
+source $DOTS/sh/profile.d/path.sh    || echo '[WARN] Unable to load path plugin'
+source $DOTS/sh/profile.d/environ.sh || echo '[WARN] Unable to load environ plugin'
+source $DOTS/sh/profile.d/misc.sh    || echo '[WARN] Unable to load misc plugin'
+
+
+# .-------------.
+# | Load rcfile |
+# '-------------'
+
+if [ -z "$SOURCE_FROM_ZSH" ]; then
+    source "$ENV" || return $?
+fi
+
+
+# .---------------------.
+# | Load local settings |
+# '---------------------'
+
+if [ -f "$DOTSLO/sh/profile" ]; then
+    source "$DOTSLO/sh/profile" || return $?
+fi
+
+
+# .----------------.
+# | Skip hushlogin |
+# '----------------'
+
+if [ -f .hushlogin ] || [ "$TMUX" != "" ]; then
+    return 1
+fi
+
+
+# .-------------------.
+# | Load lazy plugins |
+# '-------------------'
+
+source $DOTS/sh/profile.d/mail.lazy.sh       || echo '[WARN] Unable to load mail plugin'
+source $DOTS/sh/profile.d/tmux-list.lazy.sh  || echo '[WARN] Unable to load tmux-list plugin'
+source $DOTS/sh/profile.d/date.lazy.sh       || echo '[WARN] Unable to load date plugin'
+source $DOTS/sh/profile.d/sync-local.lazy.sh || echo '[WARN] Unable to load sync-local plugin'
+
+
+# .---------------------.
+# | Load local settings |
+# '---------------------'
+
+if [ -f "$DOTSLO/sh/profile.lazy" ]; then
+    source "$DOTSLO/sh/profile.lazy" || return $?
+fi

@@ -1,0 +1,79 @@
+# .-----------------------------.
+# | Check machine dependent env |
+# '-----------------------------'
+
+if [ -z "$DOTS" ] || [ -z "$DOTSLO" ]; then
+    echo '[FATAL] $DOTS or $DOTSLO is not defined, please set them in $HOME/.dots' >&2
+    return 255
+fi
+
+
+# .------------------------------.
+# | Load common settings from sh |
+# '------------------------------'
+
+export SOURCE_FROM_ZSH=1
+emulate sh -c "source $DOTS/sh/shrc"
+ret="$?"
+unset SOURCE_FROM_ZSH
+if [ "$ret" -ne "0" ]; then
+    return "$ret"
+fi
+
+
+# .------------------.
+# | General settings |
+# '------------------'
+
+# Path to your oh-my-zsh installation.
+if [ -z "$DOTS_PATH_OH_MY_ZSH" ]; then
+    echo '[FATAL] Unable to find oh-my-zsh, please define $DOTS_PATH_OH_MY_ZSH' >&2
+    return 255
+fi
+
+if [ -z "$DOTS_PATH_ZSH_CUSTOM" ]; then
+    echo '[FATAL] Unable to find zsh custom dir, please define $DOTS_PATH_ZSH_CUSTOM' >&2
+    return 255
+fi
+
+export ZSH="$DOTS_PATH_OH_MY_ZSH"
+ZSH_CUSTOM="$DOTS_PATH_ZSH_CUSTOM"
+ZSH_THEME="dots"
+
+# .-----------------.
+# | Plugin settings |
+# '-----------------'
+
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=109"
+
+
+# .--------------.
+# | Load plugins |
+# '--------------'
+
+plugins=(git zsh-autosuggestions)
+
+
+# .---------------------.
+# | Load local settings |
+# '---------------------'
+
+if [ -f "$DOTSLO/zsh/zshrc" ]; then
+    source "$DOTSLO/zsh/zshrc" || return $?
+fi
+
+
+# .---------------.
+# | Oh my zsh !!! |
+# '---------------'
+
+source $ZSH/oh-my-zsh.sh || return $?
+
+
+# .--------------------------.
+# | Load post local settings |
+# '--------------------------'
+
+if [ -f "$DOTSLO/zsh/zshrc.post" ]; then
+    source "$DOTSLO/zsh/zshrc.post" || return $?
+fi
