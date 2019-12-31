@@ -1,6 +1,6 @@
 ## Bootstrap
 ```bash
-curl "https://raw.githubusercontent.com/sasdf/.dotfiles/master/helpers/bootstrap.sh" | bash
+bash -c "$(curl 'https://raw.githubusercontent.com/sasdf/.dotfiles/master/helpers/bootstrap.sh')"
 ```
 
 
