@@ -51,7 +51,7 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=109"
 # | Load plugins |
 # '--------------'
 
-plugins=(git zsh-autosuggestions)
+plugins=(git zsh-autosuggestions zsh-completions)
 
 
 # .---------------------.
