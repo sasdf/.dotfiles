@@ -73,7 +73,7 @@ if yesno "[?] Do you want to install zsh-completions?"; then
     git_update 'https://github.com/zsh-users/zsh-completions.git' "$DOTSLO/pkg/zsh-custom/plugins/zsh-completions"
 fi
 if yesno "[?] Do you want to install miniconda3?"; then
-    local tempdir=$(mktemp -d)
+    tempdir=$(mktemp -d)
         curl -s https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh > "$tempdir/miniconda.sh"
         bash "$tempdir/miniconda.sh" -b -p "$DOTS_PATH_LOCAL/miniconda3"
     rm -rf "$tempdir"
