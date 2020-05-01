@@ -2,7 +2,7 @@
 # | Common Environ |
 # '----------------'
 
-export LC_ALL=zh_TW.UTF-8
+# export LC_ALL=zh_TW.UTF-8
 export ENV="$DOTS/sh/shrc"
 export USER=$LOGNAME
 export IGNOREEOF=23

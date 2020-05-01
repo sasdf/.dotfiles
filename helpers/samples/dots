@@ -1,11 +1,3 @@
-## Bootstrap
-```bash
-bash -c "$(curl 'https://raw.githubusercontent.com/sasdf/.dotfiles/master/helpers/bootstrap.sh')"
-```
-
-
-## Configure
-```bash
 # ~/.dots
 # --------
 
@@ -33,4 +25,3 @@ export DOTS_PATH_LOCAL_TMP="/tmp2/$USER"
 # export DOTS_PATH_KAKOUNE="$DOTSLO/pkg/kakoune"
 export DOTS_PATH_OH_MY_ZSH="$DOTSLO/pkg/oh-my-zsh"
 export DOTS_PATH_ZSH_CUSTOM="$DOTSLO/pkg/zsh-custom"
-```
