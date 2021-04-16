@@ -22,6 +22,7 @@ export KAKOUNE_POSIX_SHELL="/bin/bash"
 if [ -z "$TMUX" ]; then
     export TERM=xterm-256color
 fi
+export TERM=tmux-256color
 
 
 # .---------------.
