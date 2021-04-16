@@ -19,10 +19,9 @@ export VISUAL=kak
 export KAKOUNE_POSIX_SHELL="/bin/bash"
 
 # TERM
-if [ -z "$TMUX" ]; then
+if [ -z "$TMUX" ] && [ -z "$TERM" ]; then
     export TERM=xterm-256color
 fi
-export TERM=tmux-256color
 
 
 # .---------------.
