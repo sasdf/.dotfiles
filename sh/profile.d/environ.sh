@@ -35,6 +35,9 @@ if [ ! -z "$DOTS_PATH_LOCAL" ]; then
     # rust
     export CARGO_HOME="$DOTS_PATH_LOCAL/rust/cargo/"
     export RUSTUP_HOME="$DOTS_PATH_LOCAL/rust/rustup/"
+
+    # golang
+    export GOPATH="$DOTS_PATH_LOCAL/go/"
 fi
 
 if [ ! -z "$DOTS_PATH_LOCAL_TMP" ]; then

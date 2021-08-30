@@ -39,6 +39,9 @@ if [ ! -z "$DOTS_PATH_LOCAL" ]; then
     # rust
     export PATH="$PATH:$DOTS_PATH_LOCAL/rust/cargo/bin"
 
+    # golang
+    export PATH="$PATH:$DOTS_PATH_LOCAL/go/bin"
+
     # lib
     export LD_LIBRARY_PATH="$DOTS_PATH_LOCAL/lib"
 fi

@@ -22,6 +22,7 @@ add-highlighter global/ wrap
 # Goodbye, CLIPPY
 # ───────────────
 set-option global ui_options ncurses_assistant=none
+set-option global ui_options terminal_assistant=none
 
 
 # Avoid closing accidentally
