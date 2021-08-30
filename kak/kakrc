@@ -15,7 +15,8 @@ evaluate-commands %sh{
 # User interface
 # ──────────────
 colorscheme tomorrow-night
-add-highlighter global/ number-lines -relative -hlcursor -separator '  '
+# add-highlighter global/ number-lines -relative -hlcursor -separator '  '
+add-highlighter global/ number-lines -hlcursor -separator '  '
 add-highlighter global/ wrap
 
 
