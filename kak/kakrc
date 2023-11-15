@@ -8,4 +8,10 @@ evaluate-commands %sh{
     else
         echo "source ${kak_config}/kakrc.old"
     fi
+
+    # Load local settings
+    # ────────────
+    if [ ! -z "$DOTSLO" ] && [ -f "$DOTSLO/kak/kakrc" ]; then
+        echo source "$DOTSLO/kak/kakrc"
+    fi
 }

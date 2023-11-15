@@ -218,29 +218,26 @@ hook global InsertChar \t %{ try %{
 hook global InsertDelete ' ' %{ try %{
     execute-keys -draft 'h<a-h><a-k>\A\h+\z<ret>i<space><esc><lt>'
 }}
-define-command -hidden set-indent-impl %{
+define-command -params 2 -docstring 'set-indent <scope> <width>' set-indent %{
     evaluate-commands %sh{
-        if ! [ "$kak_text" -eq "$kak_text" ]; then
+        if ! [ "${2}" -eq "${2}" ]; then
             printf "%s\n" 'echo "Error: indent should be zero (disable) or a positive number"'
             exit
         fi
-        if [ "$kak_text" -gt "0" ]; then
-            printf "%s\n" 'set-option buffer expandtab true'
-            printf "%s\n" 'set-option buffer indentwidth "%val{text}"'
-            printf "%s\n" 'echo "Set indent width to %val{text}"'
-        elif [ "$kak_text" -eq "0" ]; then
-            printf "%s\n" 'set-option buffer expandtab false'
-            printf "%s\n" 'echo Disable indent'
-        elif [ "$kak_text" -lt "0" ]; then
+        if [ "${2}" -gt "0" ]; then
+            printf "%s\n" 'set-option %arg{1} expandtab true'
+            printf "%s\n" 'set-option %arg{1} indentwidth %arg{2}'
+            printf "%s\n" 'echo "Set %arg{1} indent width to %arg{2}"'
+        elif [ "${2}" -eq "0" ]; then
+            printf "%s\n" 'set-option %arg{1} expandtab false'
+            printf "%s\n" 'echo Disable %arg{1} indent'
+        elif [ "${2}" -lt "0" ]; then
             printf "%s\n" 'echo "Error: indent should be zero (disable) or a positive number"'
         fi
     }
 }
-define-command -docstring 'Prompt for setting indent' set-indent %{
-    prompt indent: 'set-indent-impl'
-}
-map global user -docstring 'set indent' i ':set-indent<ret>'
-
+map global user -docstring 'set buffer indent' i %{:prompt indent: 'set-indent buffer %val{text}'<ret>}
+map global user -docstring 'set global indent' I %{:prompt indent: 'set-indent global %val{text}'<ret>}
 
 
 # Buffer
