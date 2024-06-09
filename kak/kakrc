@@ -1,9 +1,11 @@
 # kakoune configuration
 
 evaluate-commands %sh{
-    if [[ "$kak_version" == "unknown" ]]; then
+    version=$(echo "${kak_version}" | tr -d 'v')
+
+    if [[ "${version}" == "unknown" ]]; then
         echo "source ${kak_config}/kakrc.v2022.10.31"
-    elif [[ ! "$kak_version" < "v2022.10.31" ]]; then
+    elif [[ ! "${version}" < "2022.10.31" ]]; then
         echo "source ${kak_config}/kakrc.v2022.10.31"
     else
         echo "source ${kak_config}/kakrc.old"
