@@ -15,6 +15,7 @@ function _hostname_prompt {
 }
 
 function _git_current_branch_prompt {
+    [[ "${PWD}" =~ '^/google/(.*)' ]] && return
     local branch=$(git_current_branch)
     if [ ! -z "$branch" ]; then
         echo "%{$fg[yellow]%} (${branch})"
