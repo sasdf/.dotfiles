@@ -249,7 +249,7 @@ def bufs-update -docstring 'populate an selection UI with a numbered buffers lis
   refresh-buffers-info
   evaluate-commands %sh{
     # find offset
-    eval "set -- $kak_opt_buffers_info"
+    eval "set -- $kak_quoted_opt_buffers_info"
     offset=-4
     while [ "$1" ]; do
       name=${1%_*}
@@ -261,7 +261,7 @@ def bufs-update -docstring 'populate an selection UI with a numbered buffers lis
     done
 
     # shift list
-    eval "set -- $kak_opt_buffers_info"
+    eval "set -- $kak_quoted_opt_buffers_info"
     offset=$(($#-$offset<10?$#-10:$offset))
     while [ "$offset" -gt "0" ]; do
         offset=$(($offset - 1))
@@ -282,13 +282,13 @@ def bufs-update -docstring 'populate an selection UI with a numbered buffers lis
     while [ "$1" ] && [ "$index" -le "10" ]; do
       idx=$(($index % 10))
       name=${1%_*}
-      sname="${name/\'/\'\'}"
+      sname="${name//\'/\'\'}"
       if [ "$name" = "$kak_bufname" ]; then
         printf "map global bufs %s ':buffer %s<ret>' -docstring '> %s" "$idx" "$sname" "$sname"
       elif [ "$name" = "$kak_opt_alt_bufname" ]; then
-        printf "map global bufs %s ':buffer %s<ret>' -docstring '. %s" "$idx" "$sname" "$sname"
+        printf "map global bufs %s ':buffer %s<ret>' -docstring '* %s" "$idx" "$sname" "$sname"
       else
-        printf "map global bufs %s ':buffer %s<ret>' -docstring '　%s" "$idx" "$sname" "$sname"
+        printf "map global bufs %s ':buffer %s<ret>' -docstring '- %s" "$idx" "$sname" "$sname"
       fi
 
       modified=${1##*_}
