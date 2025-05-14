@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -euo pipefail
+
+echo "Searching..."
+
+mapfile -d $'\0' files < <(grep -r -l --null "$@")
+
+# Now, use the prefixed files as arguments to another command
+if [[ ${#files[@]} -eq 0 ]]; then
+  echo "No files found."
+  exit -1
+fi
+
+# Prefix each element with "./"
+prefixed_files=()
+for file in "${files[@]}"; do
+  prefixed_files+=("./${file}")
+done
+
+exec kak -- "${prefixed_files[@]}"
