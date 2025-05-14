@@ -12,6 +12,10 @@ if [ ! -z "$DOTS_PATH_KAKOUNE" ]; then
     export PATH="$PATH:$DOTS_PATH_KAKOUNE/bin"
 fi
 
+if [ -d "$DOTS/bin" ]; then
+    export PATH="$PATH:$DOTS/bin"
+fi
+
 # ruby
 # export PATH="$PATH:$HOME/.gem/ruby/2.4.0/bin"
 

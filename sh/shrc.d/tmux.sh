@@ -3,8 +3,13 @@
 # '---------------------'
 
 if [ -n "$TMUX" ]; then
+    export HOSTMUX="$TMUX"
+    if [[ "$TMUX" =~ "hostmux" ]]; then
+        unset TMUX
+    fi
+
     function refresh_var () {
-        NEWENVVAR=$(tmux show-environment | grep "^$1=")
+        NEWENVVAR=$(TMUX="$HOSTMUX" tmux show-environment | grep "^$1=")
         if [ -n "$NEWENVVAR" ]; then
             echo "$1 updated"
             export $NEWENVVAR

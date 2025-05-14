@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ "$#" == 0 ]] && tmux -L hostmux ls >/dev/null 2>&1; then
+  exec tmux -L hostmux -f "$DOTS/tmux/hostmux.conf" a
+else
+  exec tmux -L hostmux -f "$DOTS/tmux/hostmux.conf" "$@"
+fi
