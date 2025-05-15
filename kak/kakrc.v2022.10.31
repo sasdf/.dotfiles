@@ -230,6 +230,7 @@ define-command -params 2 -docstring 'set-indent <scope> <width>' set-indent %{
             printf "%s\n" 'echo "Set %arg{1} indent width to %arg{2}"'
         elif [ "${2}" -eq "0" ]; then
             printf "%s\n" 'set-option %arg{1} expandtab false'
+            printf "%s\n" 'set-option %arg{1} indentwidth %arg{2}'
             printf "%s\n" 'echo Disable %arg{1} indent'
         elif [ "${2}" -lt "0" ]; then
             printf "%s\n" 'echo "Error: indent should be zero (disable) or a positive number"'
