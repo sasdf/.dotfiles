@@ -421,3 +421,105 @@ define-command -docstring 'Prompt for setting filetype' set-filetype %{
     prompt filetype: 'set-option buffer filetype %val{text}'
 }
 map global user -docstring 'set filetype' f ':set-filetype<ret>'
+
+
+# GenAI Integration
+# ──────────────────
+define-command -params 1 -docstring 'Inline text' inline-text %{
+  evaluate-commands -draft -save-regs "f" -no-hooks %{
+    set-register f %sh{ cat "${1}"; printf "x" }
+    execute-keys -draft '"fPli<backspace><esc>'
+  }
+}
+define-command -params 1 -docstring 'Inline text (replace)' replace-text %{
+  evaluate-commands -draft -save-regs "f" -no-hooks %{
+    set-register f %sh{ cat "${1}"; printf "x" }
+    execute-keys -draft 'd"fPli<backspace><esc>'
+  }
+}
+define-command -params 1 -docstring 'Inline text (append)' append-text %{
+  evaluate-commands -save-regs "f" -no-hooks %{
+    set-register f %sh{ cat "${1}"; printf "x" }
+    execute-keys '<a-:><semicolon>a<c-r>f<backspace><esc><semicolon>'
+  }
+}
+declare-option -docstring 'Include all files in context' bool genai_all_files false
+declare-option -docstring 'Run kaka from golang source' bool genai_debug_build false
+define-command -params 1.. -docstring 'Chat with GenAI' genai %{
+  nop -- %sh{
+    KAKA="kaka"
+
+    ARGS=()
+
+    if [[ "$kak_opt_genai_all_files" == "true" ]]; then
+      ARGS+=(
+        --all-files
+      )
+    fi
+
+    if [[ "$kak_opt_genai_debug_build" == "true" ]]; then
+      KAKA="go run kaka.go"
+    fi
+
+    $KAKA \
+      --cmd_fifo "$kak_command_fifo" \
+      --res_fifo "$kak_response_fifo" \
+      "${ARGS[@]}" \
+      "$@"
+  }
+}
+
+define-command -docstring 'Start conversation with AI' genai-start-conv %{
+  execute-keys "\\o"
+  execute-keys "{<ret>"
+  execute-keys "=== GenAI Conversation Start ===<ret>"
+  execute-keys "<ret>"
+  execute-keys "<lt>[User]<gt>:<ret>"
+  execute-keys "<ret>"
+  execute-keys "=== GenAI Conversation End ===<ret>"
+  execute-keys "}"
+  execute-keys "<esc>3kA <esc>"
+}
+
+define-command -docstring 'Toggle file context mode' genai-toggle-context %{
+  evaluate-commands %sh{
+    if [[ "$kak_opt_genai_all_files" == "false" ]]; then
+      echo "set-option global genai_all_files true"
+      echo "map global genai -docstring 'Context: all files' c ':genai-toggle-context<ret>'"
+    else
+      echo "set-option global genai_all_files false"
+      echo "map global genai -docstring 'Context: current file' c ':genai-toggle-context<ret>'"
+    fi
+  }
+}
+
+define-command -docstring 'Auto mode with custom prompt' genai-custom-prompt %{
+  prompt 'instruction:' 'genai auto --instr "%val{text}"'
+}
+
+declare-user-mode genai
+map global genai -docstring 'Context Mode' c ':genai-toggle-context<ret>'
+map global genai -docstring 'Magic GenAI' a ':genai auto<ret>'
+map global genai -docstring 'Magic GenAI' <c-a> ':genai auto<ret>'
+map global genai -docstring 'Grammar' g ':genai auto --instr "Grammar correction:"<ret>'
+map global genai -docstring 'Rephrase' r ':genai auto --instr "Rephrase:"<ret>'
+map global genai -docstring 'Custom prompt' t ':genai-custom-prompt<ret>'
+map global genai -docstring 'Transform whole-file' f %{:prompt instruction: 'genai diff --instr "%val{text}"'<ret>}
+map global genai -docstring 'New conversation' n ':genai-start-conv<ret>'
+map global genai -docstring 'Delete conversation' d ':genai remove-conv<ret>'
+
+# Set single file mode as default
+genai-toggle-context
+genai-toggle-context
+
+# Add key bindings
+map global user -docstring 'Open GenAI menu' g ':enter-user-mode genai<ret>'
+map global normal -docstring 'Open GenAI menu' <c-a> ':enter-user-mode genai<ret>'
+map global insert -docstring 'Open GenAI menu' <c-a> '<esc>:enter-user-mode genai<ret>'
+
+
+# Word Diff Highlighter
+# ─────────────────────
+require-module diff
+add-highlighter shared/diff/ regex "\{\+[^\n]+?\+\}" 0:green,default
+add-highlighter shared/diff/ regex "\[-[^\n]+?-\]" 0:red,default
