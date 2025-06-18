@@ -503,6 +503,7 @@ map global genai -docstring 'Magic GenAI' a ':genai auto<ret>'
 map global genai -docstring 'Magic GenAI' <c-a> ':genai auto<ret>'
 map global genai -docstring 'Grammar' g ':genai auto --instr "Grammar correction:"<ret>'
 map global genai -docstring 'Rephrase' r ':genai auto --instr "Rephrase:"<ret>'
+map global genai -docstring 'Edit config' e ':e ~/.config/kaka/kaka.yml<ret>'
 map global genai -docstring 'Custom prompt' t ':genai-custom-prompt<ret>'
 map global genai -docstring 'Transform whole-file' f %{:prompt instruction: 'genai diff --instr "%val{text}"'<ret>}
 map global genai -docstring 'New conversation' n ':genai-start-conv<ret>'
