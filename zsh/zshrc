@@ -53,6 +53,8 @@ ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=109"
 
 plugins=(git zsh-autosuggestions zsh-completions)
 
+source "$DOTS/zsh/zshrc.d/tmux.sh" || echo '[WARN] Unable to load tmux plugin'
+
 
 # .---------------------.
 # | Load local settings |
