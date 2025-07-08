@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# Raise an error if inside tmux
+if [[ -n "$TMUX" ]]; then
+  echo "Error: hostmux cannot be run inside tmux. Please exit TMUX and try again." >&2
+  exit 1
+fi
+
+# Raise an error if inside hostmux
+if [[ -n "$HOSTMUX" ]]; then
+  echo "Error: hostmux cannot be run inside hostmux." >&2
+  exit 1
+fi
+
+# If no arguments are given and a hostmux session exists, attach to it.
 if [[ "$#" == 0 ]] && tmux -L hostmux ls >/dev/null 2>&1; then
   exec tmux -L hostmux -f "$DOTS/tmux/hostmux.conf" a
 else
