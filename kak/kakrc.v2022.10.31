@@ -306,6 +306,18 @@ def bufs-update -docstring 'populate an selection UI with a numbered buffers lis
 define-command -docstring 'Open file similar to bufname' buffer-bufname %{
   execute-keys ":edit %val{bufname}"
 }
+define-command -docstring 'Open BUILD file in this directory' buffer-BUILD %{
+  evaluate-commands %sh{
+    eval set -- "$kak_quoted_buffile"
+    file="$(dirname "$1")/BUILD"
+    if [[ -f "$file" ]]; then
+      file="${file/\'/\'\'}"
+      printf "edit '%s'\n" "$file"
+    else
+      printf "echo 'BUILD file not found'\n"
+    fi
+  }
+}
 map global bufs -docstring 'swap' 'a' 'ga'
 # map global bufs -docstring 'prev' 'p' ':buffer-previous<ret>' # Qwerty
 map global bufs -docstring 'prev' 't' ':buffer-previous<ret>' # Dvorak
@@ -314,6 +326,7 @@ map global bufs -docstring 'open' 'o' ':fzf-file<ret>'
 map global bufs -docstring 'find' 'f' ':fzf-buffer<ret>'
 map global bufs -docstring 'search' 's' ':fzf-search<ret>'
 map global bufs -docstring 'edit' 'e' ':buffer-bufname<ret>'
+map global bufs -docstring 'BUILD' 'b' ':buffer-BUILD<ret>'
 map global bufs -docstring 'scratch' 'c' ':edit -scratch<ret>'
 map global bufs -docstring 'debug' 'd' ':edit *debug*<ret>'
 map global bufs -docstring ' ' ' ' ''
@@ -502,8 +515,8 @@ declare-user-mode genai
 map global genai -docstring 'Context Mode' c ':genai-toggle-context<ret>'
 map global genai -docstring 'Magic GenAI' a ':genai auto<ret>'
 map global genai -docstring 'Magic GenAI' <c-a> ':genai auto<ret>'
-map global genai -docstring 'Grammar' g ':genai auto --instr "Grammar correction:"<ret>'
-map global genai -docstring 'Rephrase' r ':genai auto --instr "Rephrase:"<ret>'
+map global genai -docstring 'Grammar' g ':genai auto --instr "Correct grammar of the selected part"<ret>'
+map global genai -docstring 'Rephrase' r ':genai auto --instr "Rephrase the selected part"<ret>'
 map global genai -docstring 'Edit config' e ':e ~/.config/kaka/kaka.yml<ret>'
 map global genai -docstring 'Custom prompt' t ':genai-custom-prompt<ret>'
 map global genai -docstring 'Transform whole-file' f %{:prompt instruction: 'genai diff --instr "%val{text}"'<ret>}
@@ -525,3 +538,17 @@ map global insert -docstring 'Open GenAI menu' <c-a> '<esc>:enter-user-mode gena
 require-module diff
 add-highlighter shared/diff/ regex "\{\+[^\n]+?\+\}" 0:green,default
 add-highlighter shared/diff/ regex "\[-[^\n]+?-\]" 0:red,default
+
+
+# Git Diff Buffer
+# ─────────────────────
+define-command -docstring 'Open current git diff' -params 1 git-diff %{
+  edit -scratch '*git-diff*'
+  set-option buffer filetype 'git-diff'
+  evaluate-commands -save-regs "f" -no-hooks %{
+    set-register f %sh{ git diff ${1} }
+    execute-keys -draft '%d"fpggd<esc>'
+  }
+}
+map global user -docstring 'Open current git diff' d ':git-diff HEAD<ret>'
+map global user -docstring 'Open parent git diff' D ':git-diff HEAD^<ret>'

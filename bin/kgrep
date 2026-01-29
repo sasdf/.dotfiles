@@ -2,9 +2,23 @@
 
 set -euo pipefail
 
-echo "Searching..."
+# find pattern argument from "$@"
+PATTERN=""
+for p in "$@"; do
+  if [[ ! "$p" =~ ^- ]]; then
+    PATTERN="$p"
+    break
+  fi
+done
 
-mapfile -d $'\0' files < <(grep -r -l --null "$@")
+if [[ -z "$PATTERN" ]]; then
+  echo "Error: No pattern provided."
+  exit 1
+fi
+
+echo "Searching with ${PATTERN} ..."
+
+mapfile -d $'\0' files < <(grep -rPIl --null "$@")
 
 # Now, use the prefixed files as arguments to another command
 if [[ ${#files[@]} -eq 0 ]]; then
@@ -18,4 +32,8 @@ for file in "${files[@]}"; do
   prefixed_files+=("./${file}")
 done
 
-exec kak -- "${prefixed_files[@]}"
+export PATTERN
+exec kak -e '
+    set-register slash %sh{ printf "%s" "${PATTERN}" }
+    execute-keys nvv
+  ' -- "${prefixed_files[@]}"
