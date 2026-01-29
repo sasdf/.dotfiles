@@ -495,14 +495,24 @@ define-command -docstring 'Start conversation with AI' genai-start-conv %{
   execute-keys "<esc>3kA <esc>"
 }
 
-define-command -docstring 'Toggle file context mode' genai-toggle-context %{
+define-command -docstring 'Set file context mode' -params 1 genai-set-context %{
   evaluate-commands %sh{
-    if [[ "$kak_opt_genai_all_files" == "false" ]]; then
+    if [[ "${1}" == "true" ]]; then
       echo "set-option global genai_all_files true"
       echo "map global genai -docstring 'Context: all files' c ':genai-toggle-context<ret>'"
     else
       echo "set-option global genai_all_files false"
       echo "map global genai -docstring 'Context: current file' c ':genai-toggle-context<ret>'"
+    fi
+  }
+}
+
+define-command -docstring 'Toggle file context mode' genai-toggle-context %{
+  evaluate-commands %sh{
+    if [[ "$kak_opt_genai_all_files" == "false" ]]; then
+      echo "genai-set-context true"
+    else
+      echo "genai-set-context false"
     fi
   }
 }
@@ -524,8 +534,7 @@ map global genai -docstring 'New conversation' n ':genai-start-conv<ret>'
 map global genai -docstring 'Delete conversation' d ':genai remove-conv<ret>'
 
 # Set single file mode as default
-genai-toggle-context
-genai-toggle-context
+genai-set-context false
 
 # Add key bindings
 map global user -docstring 'Open GenAI menu' g ':enter-user-mode genai<ret>'

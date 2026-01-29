@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if git diff-index --quiet --cached HEAD --; then
+  # No staged files, likely reword
+  base='HEAD^'
+else
+  base='HEAD'
+fi
+
+exec kak -e "
+  evaluate-commands -draft %{
+    git-diff $base
+  }
+  genai-set-context true
+" "$@"
