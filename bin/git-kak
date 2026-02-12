@@ -20,8 +20,8 @@ if [[ "$1" == "$ROOT/$EDITMSG" ]]; then
 fi
 
 if [[ "$IS_COMMITING" -eq "1" || $# -eq 0 ]]; then
-  if git diff-index --quiet --cached HEAD --; then
-    # No staged files, likely reword
+  if git diff-index --quiet HEAD --; then
+    # No staged or dirty files, likely reword
     refs='HEAD^'
   else
     refs='HEAD'

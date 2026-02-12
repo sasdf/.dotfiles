@@ -553,6 +553,7 @@ map global genai -docstring 'Rephrase' r ':genai auto --instr "Rephrase the sele
 map global genai -docstring 'Edit config' e ':e ~/.config/kaka/kaka.yml<ret>'
 map global genai -docstring 'Custom prompt' t ':genai-custom-prompt<ret>'
 map global genai -docstring 'Transform whole-file' f %{:prompt instruction: 'genai diff --instr "%val{text}"'<ret>}
+map global genai -docstring 'Transform multi-file' F %{:prompt instruction: 'genai multidiff --instr "%val{text}"'<ret>}
 map global genai -docstring 'New conversation' n ':genai-start-conv<ret>'
 map global genai -docstring 'Delete conversation' d ':genai remove-conv<ret>'
 map global genai -docstring 'Open prompts' p ':genai-open-prompts<ret>'
