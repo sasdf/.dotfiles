@@ -318,8 +318,12 @@ define-command -docstring 'Open BUILD file in this directory' buffer-BUILD %{
     fi
   }
 }
+define-command buffer-readonly -docstring 'reopen current file as readonly' %{
+  edit -readonly "%val{buffile}"
+}
+
 map global bufs -docstring 'swap' 'a' 'ga'
-# map global bufs -docstring 'prev' 'p' ':buffer-previous<ret>' # Qwerty
+      # map global bufs -docstring 'prev' 'p' ':buffer-previous<ret>' # Qwerty
 map global bufs -docstring 'prev' 't' ':buffer-previous<ret>' # Dvorak
 map global bufs -docstring 'next' 'n' ':buffer-next<ret>'
 map global bufs -docstring 'open' 'o' ':fzf-file<ret>'
@@ -335,12 +339,14 @@ map global normal -docstring 'show buffer list' -- '-' ':bufs-update<ret>:enter-
 
 # FZF
 # ───
-define-command -docstring 'Invoke fzf to open a file' fzf-file %{
+define-command -params ..1 -docstring 'Invoke fzf to open a file' fzf-file %{
     evaluate-commands %sh{
         if [ -z "${kak_client_env_TMUX}" ]; then
             printf 'fail "client was not started under tmux"\n'
         else
+            dir="${1:-.}"
             file=$(
+                cd "$dir" &&
                 rg -L --hidden --files -0 |
                 TMUX="${kak_client_env_TMUX}" fzf-tmux \
                     --read0 \
@@ -353,8 +359,11 @@ define-command -docstring 'Invoke fzf to open a file' fzf-file %{
                     --preview-window=right \
             )
             if [ -n "$file" ]; then
-                file=${file/\'/\'\'}
+                file="$dir/$file"
+                file="${file/\'/\'\'}"
                 printf "edit '%s'\n" "$file"
+            else
+                printf 'fail "no file selected"'
             fi
         fi
     }
@@ -518,6 +527,23 @@ define-command -docstring 'Auto mode with custom prompt' genai-custom-prompt %{
   prompt 'instruction:' 'genai auto --instr "%val{text}"'
 }
 
+declare-option -docstring 'Path to the directory containing prompt files' \
+    str genai_prompts_dir "%sh{ echo $HOME/.config/prompts/ }"
+
+define-command -hidden genai-open-prompts -docstring 'Open a prompt file' %{
+  evaluate-commands %sh{
+    if [ ! -d "$kak_opt_genai_prompts_dir" ]; then
+      printf "fail 'genai_prompts_dir is not a directory'\n"
+    fi
+  }
+  fzf-file %opt{genai_prompts_dir}
+  edit -scratch *prompt*
+  delete-buffer!
+  buffer-readonly
+  rename-buffer -scratch *prompt*
+  execute-keys "ga"
+}
+
 declare-user-mode genai
 map global genai -docstring 'Context Mode' c ':genai-toggle-context<ret>'
 map global genai -docstring 'Magic GenAI' a ':genai auto<ret>'
@@ -529,6 +555,8 @@ map global genai -docstring 'Custom prompt' t ':genai-custom-prompt<ret>'
 map global genai -docstring 'Transform whole-file' f %{:prompt instruction: 'genai diff --instr "%val{text}"'<ret>}
 map global genai -docstring 'New conversation' n ':genai-start-conv<ret>'
 map global genai -docstring 'Delete conversation' d ':genai remove-conv<ret>'
+map global genai -docstring 'Open prompts' p ':genai-open-prompts<ret>'
+
 
 # Set single file mode as default
 genai-set-context false
