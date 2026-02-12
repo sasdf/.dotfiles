@@ -439,21 +439,18 @@ map global user -docstring 'set filetype' f ':set-filetype<ret>'
 # GenAI Integration
 # ──────────────────
 define-command -params 1 -docstring 'Inline text' inline-text %{
-  evaluate-commands -draft -save-regs "f" -no-hooks %{
-    set-register f %sh{ cat "${1}"; printf "x" }
-    execute-keys -draft '"fPli<backspace><esc>'
+  evaluate-commands -draft -no-hooks %{
+    execute-keys -draft "!cat '%arg{1}'<ret>"
   }
 }
 define-command -params 1 -docstring 'Inline text (replace)' replace-text %{
-  evaluate-commands -draft -save-regs "f" -no-hooks %{
-    set-register f %sh{ cat "${1}"; printf "x" }
-    execute-keys -draft 'd"fPli<backspace><esc>'
+  evaluate-commands -draft -save-regs '"' -no-hooks %{
+    execute-keys -draft "d!cat '%arg{1}'<ret>"
   }
 }
 define-command -params 1 -docstring 'Inline text (append)' append-text %{
-  evaluate-commands -save-regs "f" -no-hooks %{
-    set-register f %sh{ cat "${1}"; printf "x" }
-    execute-keys '<a-:><semicolon>a<c-r>f<backspace><esc><semicolon>'
+  evaluate-commands -draft -no-hooks %{
+    execute-keys -draft "<a-!>cat '%arg{1}'<ret>"
   }
 }
 declare-option -docstring 'Include all files in context' bool genai_all_files false
@@ -554,9 +551,9 @@ add-highlighter shared/diff/ regex "\[-[^\n]+?-\]" 0:red,default
 define-command -docstring 'Open current git diff' -params 1 git-diff %{
   edit -scratch '*git-diff*'
   set-option buffer filetype 'git-diff'
-  evaluate-commands -save-regs "f" -no-hooks %{
-    set-register f %sh{ git diff ${1} }
-    execute-keys -draft '%d"fpggd<esc>'
+  evaluate-commands -draft -no-hooks %{
+    # Select all, replace selection with git diff (without stdin).
+    execute-keys -draft "%%|:|git diff '%arg{1}'<ret>"
   }
 }
 map global user -docstring 'Open current git diff' d ':git-diff HEAD<ret>'

@@ -1,0 +1,78 @@
+#!/bin/bash
+
+files=()
+IS_COMMITING=0
+ROOT=$(git rev-parse --show-toplevel)
+EDITMSG=".git/COMMIT_EDITMSG"
+CHANGELOG=".git/CHANGELOG"
+
+commands=()
+
+pinned=( "*git-diff*" )
+
+kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
+
+if [[ "$1" == "$ROOT/$EDITMSG" ]]; then
+  files+=( "$EDITMSG" )
+  IS_COMMITING=1
+  pinned=( "$EDITMSG" "${pinned[@]}" )
+  shift
+fi
+
+if [[ "$IS_COMMITING" -eq "1" || $# -eq 0 ]]; then
+  if git diff-index --quiet --cached HEAD --; then
+    # No staged files, likely reword
+    refs='HEAD^'
+  else
+    refs='HEAD'
+  fi
+elif [[ $# -eq 1 ]]; then
+  refs="$1"
+  shift
+else
+  echo "Usage: $0 [commit-msg] [refs]" >&2
+  exit 1
+fi
+
+mapfile -t diff_files < <(git diff "$refs" --name-only)
+files+=( "${diff_files[@]}" )
+
+for i in "${!files[@]}"; do
+  files[i]="$ROOT/${files[i]}"
+done
+
+# Include git logs when not in a commit operation
+if [[ "$IS_COMMITING" -eq "0" ]]; then
+  if [[ "$refs" != *".."* ]]; then
+    log_refs="${refs}.."
+  else
+    log_refs="$refs"
+  fi
+  git log -p "$log_refs" > "$ROOT/$CHANGELOG"
+
+  if [[ -s "$ROOT/$CHANGELOG" ]]; then
+    files+=( "$ROOT/$CHANGELOG" )
+    pinned+=( "*git-log*" )
+    commands+=("
+      buffer-last
+      set buffer filetype git-log
+      rename-buffer -scratch *git-log*
+    ")
+  fi
+fi
+
+pinned_args=""
+for p in "${pinned[@]}"; do
+  pinned_args="$pinned_args $(kakquote "$p")"
+done
+
+commands+=("
+  git-diff $refs
+  genai-set-context true
+  arrange-buffers ${pinned_args}
+  buffer-first
+")
+
+commands="${commands[@]}"
+
+exec kak -e "${commands}" "${files[@]}"
