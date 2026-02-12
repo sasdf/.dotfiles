@@ -4,13 +4,13 @@ evaluate-commands %sh{
     version=$(echo "${kak_version}" | tr -d 'v')
 
     if [[ "${version}" == "unknown" ]]; then
-        echo "source ${kak_config}/kakrc.v2022.10.31"
+        echo "source ${kak_config}/v2022.10.31.kak"
     elif [[ "${version}" == "" ]]; then
-        echo "source ${kak_config}/kakrc.v2022.10.31"
+        echo "source ${kak_config}/v2022.10.31.kak"
     elif [[ ! "${version}" < "2022.10.31" ]]; then
-        echo "source ${kak_config}/kakrc.v2022.10.31"
+        echo "source ${kak_config}/v2022.10.31.kak"
     else
-        echo "source ${kak_config}/kakrc.old"
+        echo "source ${kak_config}/old.kak"
     fi
 
     # Load local settings
