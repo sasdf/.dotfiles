@@ -322,19 +322,30 @@ define-command buffer-readonly -docstring 'reopen current file as readonly' %{
   edit -readonly "%val{buffile}"
 }
 
-map global bufs -docstring 'swap' 'a' 'ga'
-      # map global bufs -docstring 'prev' 'p' ':buffer-previous<ret>' # Qwerty
-map global bufs -docstring 'prev' 't' ':buffer-previous<ret>' # Dvorak
-map global bufs -docstring 'next' 'n' ':buffer-next<ret>'
-map global bufs -docstring 'open' 'o' ':fzf-file<ret>'
-map global bufs -docstring 'find' 'f' ':fzf-buffer<ret>'
-map global bufs -docstring 'search' 's' ':fzf-search<ret>'
-map global bufs -docstring 'edit' 'e' ':buffer-bufname<ret>'
-map global bufs -docstring 'BUILD' 'b' ':buffer-BUILD<ret>'
-map global bufs -docstring 'scratch' 'c' ':edit -scratch<ret>'
-map global bufs -docstring 'debug' 'd' ':edit *debug*<ret>'
-map global bufs -docstring ' ' ' ' ''
-map global normal -docstring 'show buffer list' -- '-' ':bufs-update<ret>:enter-user-mode -lock bufs<ret>'
+define-command bufs-enter -hidden -docstring 'enter bufs user-mode' %{
+  bufs-update
+  enter-user-mode bufs
+}
+
+define-command bufs-cmd -hidden -docstring 'evaluate bufs subcommand' -params 1 %{
+  try %{
+    evaluate-commands "%arg{1}"
+  }
+  bufs-enter
+}
+
+map global bufs -docstring 'swap'    'a' ':bufs-cmd "exec ga"<ret>'
+map global bufs -docstring 'prev'    't' ':bufs-cmd "buffer-previous"<ret>' # Dvorak
+map global bufs -docstring 'next'    'n' ':bufs-cmd "buffer-next"<ret>'
+map global bufs -docstring 'open'    'o' ':bufs-cmd "fzf-file"<ret>'
+map global bufs -docstring 'find'    'f' ':bufs-cmd "fzf-buffer"<ret>'
+map global bufs -docstring 'search'  's' ':bufs-cmd "fzf-search"<ret>'
+map global bufs -docstring 'edit'    'e' ':bufs-cmd "buffer-bufname"<ret>'
+map global bufs -docstring 'BUILD'   'b' ':bufs-cmd "buffer-BUILD"<ret>'
+map global bufs -docstring 'scratch' 'c' ':bufs-cmd "edit -scratch"<ret>'
+map global bufs -docstring 'debug'   '!' ':bufs-cmd "edit *debug*"<ret>'
+map global bufs -docstring ' '       ' ' ''
+map global normal -docstring 'show buffer list' -- '-' ':bufs-enter<ret>'
 
 
 # FZF
