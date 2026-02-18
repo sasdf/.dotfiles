@@ -570,9 +570,11 @@ map global insert -docstring 'Open GenAI menu' <c-a> '<esc>:enter-user-mode gena
 
 # Word Diff Highlighter
 # ─────────────────────
-require-module diff
-add-highlighter shared/diff/ regex "\{\+[^\n]+?\+\}" 0:green,default
-add-highlighter shared/diff/ regex "\[-[^\n]+?-\]" 0:red,default
+hook -once global WinSetOption filetype=diff %{
+  require-module diff
+  add-highlighter shared/diff/ regex "\{\+[^\n]+?\+\}" 0:green,default
+  add-highlighter shared/diff/ regex "\[-[^\n]+?-\]" 0:red,default
+}
 
 
 # Git Diff Buffer
@@ -587,3 +589,9 @@ define-command -docstring 'Open current git diff' -params 1 git-diff %{
 }
 map global user -docstring 'Open current git diff' d ':git-diff HEAD<ret>'
 map global user -docstring 'Open parent git diff' D ':git-diff HEAD^<ret>'
+
+# Use Alt-Enter or Enter to jump to the original or modified file.
+hook global WinSetOption filetype=diff %{
+  require-module diff
+  map buffer normal <a-ret> ':diff-jump -<ret>'
+}
