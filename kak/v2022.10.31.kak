@@ -361,7 +361,7 @@ define-command -params ..1 -docstring 'Invoke fzf to open a file' fzf-file %{
                 rg -L --hidden --files -0 |
                 TMUX="${kak_client_env_TMUX}" fzf-tmux \
                     --read0 \
-                    -d 30 \
+                    -d 80% \
                     --preview " \
                         bat --color=always \
                             --style=header,grid,numbers \
@@ -396,7 +396,7 @@ define-command -hidden fzf-search-impl %{
                 rg -L --hidden -0 -l "$kak_text" |
                 TMUX="${kak_client_env_TMUX}" fzf-tmux \
                     --read0 \
-                    -d 30 \
+                    -d 80% \
                     --preview '\
                         rg "$(cat "'$tmp'")" \
                             -A 1 -B 1 \
@@ -424,7 +424,7 @@ define-command -docstring 'Invoke fzf to select a buffer' fzf-buffer %{
                     shift
                 done
             ) |
-            fzf-tmux -d 40 --read0
+            fzf-tmux -d 80% --read0
         )
         BUFFER=${BUFFER/\'/\'\'}
         if [ -n "$BUFFER" ]; then
