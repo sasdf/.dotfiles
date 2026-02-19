@@ -304,7 +304,11 @@ def bufs-update -docstring 'populate an selection UI with a numbered buffers lis
   }
 }
 define-command -docstring 'Open file similar to bufname' buffer-bufname %{
-  execute-keys ":edit %val{bufname}"
+  # execute-keys ":edit %val{bufname}"
+  prompt -file-completion 'edit:' -init "%val{buffile}" %{
+      edit "%val{text}"
+      bufs-enter
+  }
 }
 define-command -docstring 'Open BUILD file in this directory' buffer-BUILD %{
   evaluate-commands %sh{
@@ -339,8 +343,8 @@ map global bufs -docstring 'prev'    't' ':bufs-cmd "buffer-previous"<ret>' # Dv
 map global bufs -docstring 'next'    'n' ':bufs-cmd "buffer-next"<ret>'
 map global bufs -docstring 'open'    'o' ':bufs-cmd "fzf-file"<ret>'
 map global bufs -docstring 'find'    'f' ':bufs-cmd "fzf-buffer"<ret>'
-map global bufs -docstring 'search'  's' ':bufs-cmd "fzf-search"<ret>'
-map global bufs -docstring 'edit'    'e' ':bufs-cmd "buffer-bufname"<ret>'
+map global bufs -docstring 'grep'    'g' ':fzf-grep<ret>'
+map global bufs -docstring 'edit'    'e' ':buffer-bufname<ret>'
 map global bufs -docstring 'BUILD'   'b' ':bufs-cmd "buffer-BUILD"<ret>'
 map global bufs -docstring 'scratch' 'c' ':bufs-cmd "edit -scratch"<ret>'
 map global bufs -docstring 'debug'   '!' ':bufs-cmd "edit *debug*"<ret>'
@@ -380,32 +384,32 @@ define-command -params ..1 -docstring 'Invoke fzf to open a file' fzf-file %{
     }
 }
 
-define-command -docstring 'Invoke fzf to search a file' fzf-search %{
-    execute-keys '<esc>'
-    prompt 'search' fzf-search-impl
+define-command -docstring 'Invoke fzf to search a file' fzf-grep %{
+    prompt 'search' %{
+        fzf-grep-impl
+        bufs-enter
+    }
 }
 
-define-command -hidden fzf-search-impl %{
+define-command -hidden fzf-grep-impl %{
     evaluate-commands %sh{
         if [ -z "${kak_client_env_TMUX}" ]; then
             printf 'fail "client was not started under tmux"\n'
         else
-            tmp=$(mktemp "${TMPDIR:-/tmp}/kak-fzf.XXXXXX")
-            printf "%s" "$kak_text" > $tmp
+            quoted=$(printf "%q" "$kak_text")
             file=$(
-                rg -L --hidden -0 -l "$kak_text" |
+                rg -L --hidden -0 -l "$kak_text" < /dev/null | \
                 TMUX="${kak_client_env_TMUX}" fzf-tmux \
                     --read0 \
                     -d 80% \
-                    --preview '\
-                        rg "$(cat "'$tmp'")" \
-                            -A 1 -B 1 \
+                    --preview "\
+                        rg $quoted \
+                            -A 2 -B 2 \
                             --color=always \
                             {} | \
-                        head -n 40' \
+                        head -n 80" \
                     --preview-window=right \
             )
-            rm -f "$tmp"
             if [ -n "$file" ]; then
                 file=${file/\'/\'\'}
                 printf "edit '%s'\n" "$file"
