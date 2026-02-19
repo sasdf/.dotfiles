@@ -657,3 +657,42 @@ hook global WinSetOption filetype=diff %{
   require-module diff
   map buffer normal <a-ret> ':diff-jump -<ret>'
 }
+
+
+# Last Change Diff Popup
+# ─────────────────────
+define-command -docstring 'Open diff of the last change' show-last-diff %{
+  execute-keys -draft uU
+  evaluate-commands -draft -no-hooks %sh{
+    if [ -z "${kak_client_env_TMUX}" ]; then
+        printf 'fail "client was not started under tmux"\n'
+        exit 1
+    fi
+
+    tmp_before="$(mktemp -t kak_diff_before_XXXXXX)"
+    tmp_after="$(mktemp -t kak_diff_after_XXXXXX)"
+    if [ -z "$tmp_before" ] || [ -z "$tmp_after" ]; then
+      printf 'fail "could not create temporary files"\n'
+      exit 1
+    fi
+    trap 'rm -f "$tmp_before" "$tmp_after"' EXIT
+
+    quoted_before="${tmp_before/\'/\'\'}"
+    quoted_after="${tmp_after/\'/\'\'}"
+    quoted_fifo="${kak_response_fifo/\'/\'\'}"
+    echo "
+        write! '$quoted_before'
+        execute-keys u
+        write! '$quoted_after'
+        execute-keys U
+        echo -to-file '$quoted_fifo' 'ok'
+    " > "$kak_command_fifo"
+    cat "$kak_response_fifo" > /dev/null # sync
+
+    TMUX="${kak_client_env_TMUX}" tmux popup -w 80% -h 80% -E \
+      -e "tmp_before=$tmp_before" \
+      -e "tmp_after=$tmp_after" \
+      'git diff --no-index "$tmp_before" "$tmp_after"'
+  }
+}
+map global user -docstring 'diff of the last change' u ':show-last-diff<ret>'
