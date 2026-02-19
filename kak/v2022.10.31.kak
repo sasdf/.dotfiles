@@ -475,28 +475,33 @@ define-command -params 1 -docstring 'Inline text (append)' append-text %{
 }
 declare-option -docstring 'Include all files in context' bool genai_all_files false
 declare-option -docstring 'Run kaka from golang source' bool genai_debug_build false
+declare-option -docstring 'Last genai command' str-list genai_last_command ""
 define-command -params 1.. -docstring 'Chat with GenAI' genai %{
-  execute-keys '<a-:>'
-  nop -- %sh{
-    KAKA="kaka"
+  set-option global genai_last_command %arg{@}
+  # Wrap in evaluate-commands to group undo history
+  evaluate-commands %{
+    execute-keys '<a-:>'
+    nop -- %sh{
+      KAKA="kaka"
 
-    ARGS=()
+      ARGS=()
 
-    if [[ "$kak_opt_genai_all_files" == "true" ]]; then
-      ARGS+=(
-        --all-files
-      )
-    fi
+      if [[ "$kak_opt_genai_all_files" == "true" ]]; then
+        ARGS+=(
+          --all-files
+        )
+      fi
 
-    if [[ "$kak_opt_genai_debug_build" == "true" ]]; then
-      KAKA="go run kaka.go"
-    fi
+      if [[ "$kak_opt_genai_debug_build" == "true" ]]; then
+        KAKA="go run kaka.go"
+      fi
 
-    $KAKA \
-      --cmd_fifo "$kak_command_fifo" \
-      --res_fifo "$kak_response_fifo" \
-      "${ARGS[@]}" \
-      "$@"
+      $KAKA \
+        --cmd_fifo "$kak_command_fifo" \
+        --res_fifo "$kak_response_fifo" \
+        "${ARGS[@]}" \
+        "$@"
+    }
   }
 }
 
@@ -534,8 +539,10 @@ define-command -docstring 'Toggle file context mode' genai-toggle-context %{
   }
 }
 
-define-command -docstring 'Auto mode with custom prompt' genai-custom-prompt %{
-  prompt 'instruction:' 'genai auto --instr "%val{text}"'
+define-command -docstring 'Auto mode with custom prompt' -params 1 genai-prompt %{
+  prompt "genai (%arg{1}):" %{
+    genai "%arg{1}" --instr "%val{text}"
+  }
 }
 
 declare-option -docstring 'Path to the directory containing prompt files' \
@@ -543,29 +550,49 @@ declare-option -docstring 'Path to the directory containing prompt files' \
 
 define-command -hidden genai-open-prompts -docstring 'Open a prompt file' %{
   evaluate-commands %sh{
-    if [ ! -d "$kak_opt_genai_prompts_dir" ]; then
+    if [ -z "$kak_opt_genai_prompts_dir" ]; then
+      printf "fail 'genai_prompts_dir is not set'\n"
+    elif [ ! -e "$kak_opt_genai_prompts_dir" ]; then
+      printf "fail 'genai_prompts_dir directory does not exist'\n"
+    elif [ ! -d "$kak_opt_genai_prompts_dir" ]; then
       printf "fail 'genai_prompts_dir is not a directory'\n"
     fi
   }
   fzf-file %opt{genai_prompts_dir}
   edit -scratch *prompt*
   delete-buffer!
-  buffer-readonly
   rename-buffer -scratch *prompt*
-  execute-keys "ga"
+  execute-keys "gj"
+}
+
+define-command -hidden genai-repeat -docstring 'Repeat the last genai command' -params ..1 %{
+  evaluate-commands %sh{
+    if [ -z "$kak_opt_genai_last_command" ]; then
+      printf "fail 'genai_last_command is not set'\n"
+      exit 0
+    fi
+
+    if [ "$1" = "--retry" ]; then
+      printf "try %%{execute-keys 'u'}\n"
+    fi
+    printf "genai %%opt{genai_last_command}\n"
+  }
 }
 
 declare-user-mode genai
 map global genai -docstring 'Context Mode' c ':genai-toggle-context<ret>'
+map global genai -docstring 'Retry' u ':genai-repeat --retry<ret>'
+map global genai -docstring 'Repeat' . ':genai-repeat<ret>'
 map global genai -docstring 'Magic GenAI' a ':genai auto<ret>'
 map global genai -docstring 'Magic GenAI' <c-a> ':genai auto<ret>'
 map global genai -docstring 'Grammar' g ':genai auto --instr "Correct grammar of the selected part"<ret>'
 map global genai -docstring 'Rephrase' r ':genai auto --instr "Rephrase the selected part"<ret>'
 map global genai -docstring 'Edit config' e ':e ~/.config/kaka/kaka.yml<ret>'
-map global genai -docstring 'Custom prompt' t ':genai-custom-prompt<ret>'
-map global genai -docstring 'Transform whole-file' F %{:prompt instruction: 'genai diff --instr "%val{text}"'<ret>}
-map global genai -docstring 'Transform multi-file' f %{:prompt instruction: 'genai multidiff --instr "%val{text}"'<ret>}
-map global genai -docstring 'New conversation' n ':genai-start-conv<ret>'
+map global genai -docstring 'Custom prompt' t ':genai-prompt auto<ret>'
+map global genai -docstring 'Transform whole-file' F ':genai-prompt diff<ret>'
+map global genai -docstring 'Transform multi-file' f ':genai-prompt multidiff<ret>'
+map global genai -docstring 'New conversation' n ':edit -scratch<ret>:genai-start-conv<ret>i'
+map global genai -docstring 'Start conversation' s ':genai-start-conv<ret>'
 map global genai -docstring 'Delete conversation' d ':genai remove-conv<ret>'
 map global genai -docstring 'Open prompts' p ':genai-open-prompts<ret>'
 
@@ -594,8 +621,14 @@ define-command -docstring 'Open current git diff' -params 1 git-diff %{
   edit -scratch '*git-diff*'
   set-option buffer filetype 'git-diff'
   evaluate-commands -draft -no-hooks %{
-    # Select all, replace selection with git diff (without stdin).
-    execute-keys -draft "%%|:|git diff '%arg{1}'<ret>"
+    try %{
+      execute-keys -draft "%%s^[^\n].+$<ret>"
+      # Select all, replace selection with git diff (without stdin).
+      execute-keys -draft "%%|:|git diff '%arg{1}'<ret>"
+    } catch %{
+      # Select all, replace selection with git diff (without stdin).
+      execute-keys -draft "%%d<a-!>git diff '%arg{1}'<ret>ggd"
+    }
   }
 }
 map global user -docstring 'Open current git diff' d ':git-diff HEAD<ret>'
