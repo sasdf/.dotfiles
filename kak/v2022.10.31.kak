@@ -360,24 +360,30 @@ define-command -params ..1 -docstring 'Invoke fzf to open a file' fzf-file %{
             printf 'fail "client was not started under tmux"\n'
         else
             dir="${1:-.}"
-            file=$(
+            selected=0
+            while IFS= read -r -d $'\0' file <&3; do
+                if [ -n "$file" ]; then
+                    file="$dir/$file"
+                    file="${file/\'/\'\'}"
+                    printf "edit '%s'\n" "$file"
+                    selected=1
+                fi
+            done 3< <(
                 cd "$dir" &&
                 rg -L --hidden --files -0 |
                 TMUX="${kak_client_env_TMUX}" fzf-tmux \
-                    --read0 \
-                    -d 80% \
+                    -d 80% --read0 --print0 --multi \
+                    --bind 'tab:toggle' \
+                    --bind 'ctrl-a:select-all,ctrl-d:deselect-all' \
                     --preview " \
                         bat --color=always \
                             --style=header,grid,numbers \
                             {} | \
-                        head -n 40" \
+                        head -n 80" \
                     --preview-window=right \
             )
-            if [ -n "$file" ]; then
-                file="$dir/$file"
-                file="${file/\'/\'\'}"
-                printf "edit '%s'\n" "$file"
-            else
+
+            if [ "$selected" -eq 0 ]; then
                 printf 'fail "no file selected"'
             fi
         fi
@@ -397,11 +403,19 @@ define-command -hidden fzf-grep-impl %{
             printf 'fail "client was not started under tmux"\n'
         else
             quoted=$(printf "%q" "$kak_text")
-            file=$(
+            selected=0
+            while IFS= read -r -d $'\0' file <&3; do
+                if [ -n "$file" ]; then
+                    file="${file/\'/\'\'}"
+                    printf "edit '%s'\n" "$file"
+                    selected=1
+                fi
+            done 3< <(
                 rg -L --hidden -0 -l "$kak_text" < /dev/null | \
                 TMUX="${kak_client_env_TMUX}" fzf-tmux \
-                    --read0 \
-                    -d 80% \
+                    -d 80% --read0 --print0 --multi \
+                    --bind 'tab:toggle' \
+                    --bind 'ctrl-a:select-all,ctrl-d:deselect-all' \
                     --preview "\
                         rg $quoted \
                             -A 2 -B 2 \
@@ -410,9 +424,9 @@ define-command -hidden fzf-grep-impl %{
                         head -n 80" \
                     --preview-window=right \
             )
-            if [ -n "$file" ]; then
-                file=${file/\'/\'\'}
-                printf "edit '%s'\n" "$file"
+
+            if [ "$selected" -eq 0 ]; then
+                printf 'fail "no file selected"'
             fi
         fi
     }
