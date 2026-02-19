@@ -411,7 +411,7 @@ define-command -hidden fzf-grep-impl %{
                     selected=1
                 fi
             done 3< <(
-                rg -L --hidden -0 -l "$kak_text" < /dev/null | \
+                rg -L --hidden -0 -l -- "$kak_text" < /dev/null | \
                 TMUX="${kak_client_env_TMUX}" fzf-tmux \
                     -d 80% --read0 --print0 --multi \
                     --bind 'tab:toggle' \
