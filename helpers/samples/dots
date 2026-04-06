@@ -17,8 +17,10 @@ export DOTSLO="$HOME/.dotfiles-local"
 # '---------------------------'
 
 # local storage
-export DOTS_PATH_LOCAL="/tmp2/$USER/local"
-export DOTS_PATH_LOCAL_TMP="/tmp2/$USER"
+export DOTS_PATH_LOCAL="$HOME/local"
+export DOTS_PATH_LOCAL_TMP="$HOME/tmp"
+# export DOTS_PATH_LOCAL="/tmp2/$USER/local"
+# export DOTS_PATH_LOCAL_TMP="/tmp2/$USER"
 # export DOTS_LOCAL_SYNC_SERVER="oasis2"
 
 # dotsfiles-local
