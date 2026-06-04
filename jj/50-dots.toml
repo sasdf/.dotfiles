@@ -3,3 +3,7 @@
 [ui]
 default-command = "log"
 editor = "jj-kak --editor"
+
+[aliases]
+n = ["new"]
+kak = ["util", "exec", "--", "jj-kak"]

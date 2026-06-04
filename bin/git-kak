@@ -1,9 +1,9 @@
 #!/bin/bash
 
 files=()
-IS_COMMITING=0
+EDITOR_MODE=0
 GITDIR="$(git rev-parse --git-dir)"
-EDITMSG=""
+MAIN_FILE=""
 
 commands=(
   "set-option global git_backend git"
@@ -13,29 +13,35 @@ pinned=( "*git-diff*" )
 
 kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
 
+function run_kak () {
+  trap '' SIGINT
+  set -m # Enable job control
+  kak "$@"
+  echo "done" >&2
+  exit 0
+}
+
 if [[ "${1:-}" == "--editor" ]]; then
   shift
   if [[ "${1:-}" == */COMMIT_EDITMSG ]]; then
-    EDITMSG="$1"
-    IS_COMMITING=1
+    MAIN_FILE="$1"
+    EDITOR_MODE=1
     files+=( "$@" )
     shift $#
   else
     echo "Run as normal editor" >&2
-    exec kak "$@"
-    exit 0
+    run_kak "$@"
   fi
 fi
 
 if [[ $# -ge 1 && "$1" == */* && -f "$1" ]]; then
-  exec kak "$@"
-  exit 0
+  run_kak "$@"
 fi
 
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
-if [[ "$IS_COMMITING" -eq "1" || $# -eq 0 ]]; then
+if [[ "$EDITOR_MODE" -eq "1" || $# -eq 0 ]]; then
   if git diff-index --quiet HEAD --; then
     # No staged or dirty files, likely reword
     refs='HEAD^'
@@ -54,7 +60,7 @@ mapfile -t diff_files < <(git diff "$refs" --name-only)
 files+=( "${diff_files[@]}" )
 
 # Include git logs when not in a commit operation
-if [[ "$IS_COMMITING" -eq "0" ]]; then
+if [[ "$EDITOR_MODE" -eq "0" ]]; then
   if [[ "$refs" != *".."* ]]; then
     log_refs="${refs}.."
   else
@@ -85,9 +91,9 @@ commands+=("
   arrange-buffers ${pinned_args}
 ")
 
-if [[ "$IS_COMMITING" -eq "1" ]]; then
+if [[ "$EDITOR_MODE" -eq "1" ]]; then
   commands+=("
-    edit $(kakquote "$EDITMSG")
+    edit $(kakquote "$MAIN_FILE")
     arrange-buffers %val{buffile}
   ")
 fi
@@ -98,8 +104,4 @@ commands+=("
 
 commands="${commands[@]}"
 
-# Ignore SIGINT to prevent accidental termination during editing
-# when invoked as a git editor (e.g., git kak)
-trap '' SIGINT
-
-kak -e "${commands}" "${files[@]}"
+run_kak -e "${commands}" "${files[@]}"
