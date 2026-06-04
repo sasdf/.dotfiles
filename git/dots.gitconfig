@@ -1,0 +1,31 @@
+[core]
+  pager = sed 's/\t/    /g' | less -RcK
+  editor = "git-kak --editor"
+
+[color]
+  ui = auto
+
+[alias]
+  cl = "!f() { \
+    git push origin HEAD:refs/for/${1:-main}; \
+  }; f"
+
+  root = rev-parse --show-toplevel
+  s = status
+  st = status
+  amend = commit --amend --no-edit
+  addremove = add -A
+  pdiff = diff HEAD^
+  reword = commit --amend
+  uncommit = reset --soft HEAD^
+  up = push
+  xl = log --graph --oneline --simplify-by-decoration --decorate --branches
+  xla = log --graph --oneline --simplify-by-decoration --decorate --all
+  pi = pick
+  ev = evolve
+
+[url "git@github.com:"]
+  pushInsteadOf = "https://github.com/"
+
+[push]
+  autoSetupRemote = true

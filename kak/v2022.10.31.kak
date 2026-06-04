@@ -635,7 +635,10 @@ hook -once global WinSetOption filetype=diff %{
 
 # Git Diff Buffer
 # ─────────────────────
-define-command -docstring 'Open current git diff' -params 1 git-diff %{
+declare-option -hidden str git_backend "git"
+declare-option -hidden str git_revset "HEAD"
+
+define-command -hidden -params 1 git-diff-impl %{
   edit -scratch '*git-diff*'
   set-option buffer filetype 'git-diff'
   evaluate-commands -draft -no-hooks %{
@@ -649,7 +652,40 @@ define-command -docstring 'Open current git diff' -params 1 git-diff %{
     }
   }
 }
-map global user -docstring 'Open current git diff' d ':git-diff HEAD<ret>'
+
+define-command -hidden -params 1 jj-diff-impl %{
+  edit -scratch '*git-diff*'
+  set-option buffer filetype 'git-diff'
+  evaluate-commands -draft -no-hooks %{
+    try %{
+      execute-keys -draft "%%s^[^\n].+$<ret>"
+      # Select all, replace selection with git diff (without stdin).
+      execute-keys -draft "%%|:|jj diff --git -r '%arg{1}'<ret>"
+    } catch %{
+      # Select all, replace selection with git diff (without stdin).
+      execute-keys -draft "%%d<a-!>jj diff --git -r '%arg{1}'<ret>ggd"
+    }
+  }
+}
+
+define-command -docstring 'Open current git diff' -params ..1 git-diff %{
+  evaluate-commands %sh{
+    kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
+    revset="${1:-$kak_opt_git_revset}"
+    if [[ "$kak_opt_git_backend" == "jj" ]]; then
+      if [[ "$revset" == "HEAD" ]]; then
+        revset="@"
+      elif [[ "$revset" == "HEAD^" ]]; then
+        revset="@-"
+      fi
+      printf "jj-diff-impl %s\n" "$(kakquote "$revset")"
+    else
+      printf "git-diff-impl %s\n" "$(kakquote "$revset")"
+    fi
+  }
+}
+
+map global user -docstring 'Open current git diff' d ':git-diff<ret>'
 map global user -docstring 'Open parent git diff' D ':git-diff HEAD^<ret>'
 
 # Use Alt-Enter or Enter to jump to the original or modified file.

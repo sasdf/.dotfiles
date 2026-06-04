@@ -2,22 +2,38 @@
 
 files=()
 IS_COMMITING=0
-ROOT=$(git rev-parse --show-toplevel)
-EDITMSG=".git/COMMIT_EDITMSG"
-CHANGELOG=".git/CHANGELOG"
+GITDIR="$(git rev-parse --git-dir)"
+EDITMSG=""
 
-commands=()
+commands=(
+  "set-option global git_backend git"
+)
 
 pinned=( "*git-diff*" )
 
 kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
 
-if [[ "$1" == "$ROOT/$EDITMSG" ]]; then
-  files+=( "$EDITMSG" )
-  IS_COMMITING=1
-  pinned=( "$EDITMSG" "${pinned[@]}" )
+if [[ "${1:-}" == "--editor" ]]; then
   shift
+  if [[ "${1:-}" == */COMMIT_EDITMSG ]]; then
+    EDITMSG="$1"
+    IS_COMMITING=1
+    files+=( "$@" )
+    shift $#
+  else
+    echo "Run as normal editor" >&2
+    exec kak "$@"
+    exit 0
+  fi
 fi
+
+if [[ $# -ge 1 && "$1" == */* && -f "$1" ]]; then
+  exec kak "$@"
+  exit 0
+fi
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
 
 if [[ "$IS_COMMITING" -eq "1" || $# -eq 0 ]]; then
   if git diff-index --quiet HEAD --; then
@@ -37,10 +53,6 @@ fi
 mapfile -t diff_files < <(git diff "$refs" --name-only)
 files+=( "${diff_files[@]}" )
 
-for i in "${!files[@]}"; do
-  files[i]="$ROOT/${files[i]}"
-done
-
 # Include git logs when not in a commit operation
 if [[ "$IS_COMMITING" -eq "0" ]]; then
   if [[ "$refs" != *".."* ]]; then
@@ -48,10 +60,10 @@ if [[ "$IS_COMMITING" -eq "0" ]]; then
   else
     log_refs="$refs"
   fi
-  git log -p "$log_refs" > "$ROOT/$CHANGELOG"
+  git log -p "$log_refs" > "$GITDIR/CHANGELOG"
 
-  if [[ -s "$ROOT/$CHANGELOG" ]]; then
-    files+=( "$ROOT/$CHANGELOG" )
+  if [[ -s "$GITDIR/CHANGELOG" ]]; then
+    files+=( "$GITDIR/CHANGELOG" )
     pinned+=( "*git-log*" )
     commands+=("
       buffer-last
@@ -67,9 +79,20 @@ for p in "${pinned[@]}"; do
 done
 
 commands+=("
-  git-diff $refs
+  set-option global git_revset $(kakquote "$refs")
+  git-diff
   genai-set-context true
   arrange-buffers ${pinned_args}
+")
+
+if [[ "$IS_COMMITING" -eq "1" ]]; then
+  commands+=("
+    edit $(kakquote "$EDITMSG")
+    arrange-buffers %val{buffile}
+  ")
+fi
+
+commands+=("
   buffer-first
 ")
 

@@ -1,0 +1,81 @@
+#!/bin/bash
+
+files=()
+IS_DESCRIBING=0
+DESCMSG=""
+
+commands=(
+  "set-option global git_backend jj"
+)
+
+pinned=( "*git-diff*" )
+
+kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
+
+if [[ "${1:-}" == "--editor" ]]; then
+  shift
+  if [[ "${1:-}" == *.jjdescription ]]; then
+    DESCMSG="$1"
+    IS_DESCRIBING=1
+    files+=( "$@" )
+    shift $#
+  else
+    echo "Run as normal editor" >&2
+    exec kak "$@"
+    exit 0
+  fi
+fi
+
+if [[ $# -ge 1 && "$1" == */* && -f "$1" ]]; then
+  exec kak "$@"
+  exit 0
+fi
+
+cd "$(jj root)"
+
+if [[ "$IS_DESCRIBING" -eq "1" ]]; then
+    refs='@'
+elif [[ $# -eq 0 ]]; then
+  if [ "$(jj log -r @ -T empty --no-graph --color never)" == "true" ]; then
+    refs='@-'
+  else
+    refs='@'
+  fi
+else
+  refs="$1"
+  shift
+fi
+
+mapfile -t diff_files < <(jj diff -r "$refs" --name-only)
+files+=( "${diff_files[@]}" )
+
+pinned_args=""
+for p in "${pinned[@]}"; do
+  pinned_args="$pinned_args $(kakquote "$p")"
+done
+
+commands+=("
+  set-option global git_revset $(kakquote "$refs")
+  git-diff
+  genai-set-context true
+  arrange-buffers ${pinned_args}
+")
+
+if [[ "$IS_DESCRIBING" -eq "1" ]]; then
+  commands+=("
+    edit $(kakquote "$DESCMSG")
+    arrange-buffers %val{buffile}
+  ")
+fi
+
+commands+=("
+  buffer-first
+")
+
+commands="${commands[@]}"
+
+# Ignore SIGINT to prevent accidental termination during editing
+# when invoked as a git editor (e.g., git kak)
+trap '' SIGINT
+
+kak -e "${commands}" "${files[@]}"

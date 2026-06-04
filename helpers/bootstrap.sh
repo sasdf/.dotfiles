@@ -45,12 +45,14 @@ mkdir -p "$BACKUP/"
 ln_bak () {
     local SRC="$1"
     local DST="$2"
+    local DDST="$(dirname "$DST")"
     if [ -e "$DST" ]; then
-        DDST=`dirname "$DST"`
         mkdir -p "$BACKUP/$DDST"
         mv -f "$DST" "$BACKUP/$DDST"
         echo "Backup $DST"
     fi
+    rm -f "$DST"
+    mkdir -p "$DDST"
     ln -rs "$SRC" "$DST"
 }
 
@@ -81,13 +83,17 @@ fi
 
 ln_bak  "$DOTS/zsh/custom/themes/dots.zsh-theme" "$DOTSLO/pkg/zsh-custom/themes/dots.zsh-theme"
 
-ln_bak  "$DOTS/sh/profile"      ".profile"
-ln_bak  "$DOTS/sh/shrc"         ".shrc"
-ln_bak  "$DOTS/sh/profile"      ".bash_profile"
-ln_bak  "$DOTS/sh/shrc"         ".bashrc"
-ln_bak  "$DOTS/zsh/zprofile"    ".zprofile"
-ln_bak  "$DOTS/zsh/zshrc"       ".zshrc"
-ln_bak  "$DOTS/tmux/tmux.conf"  ".tmux.conf"
-ln_bak  "$DOTS/conda/condarc"   ".condarc"
-ln_bak  "$DOTS/kak"             ".config/kak"
-ln_bak  "$DOTS/kak-lsp"         ".config/kak-lsp"
+ln_bak  "$DOTS/sh/profile"         ".profile"
+ln_bak  "$DOTS/sh/shrc"            ".shrc"
+ln_bak  "$DOTS/sh/profile"         ".bash_profile"
+ln_bak  "$DOTS/sh/shrc"            ".bashrc"
+ln_bak  "$DOTS/zsh/zprofile"       ".zprofile"
+ln_bak  "$DOTS/zsh/zshrc"          ".zshrc"
+ln_bak  "$DOTS/tmux/tmux.conf"     ".tmux.conf"
+ln_bak  "$DOTS/conda/condarc"      ".condarc"
+ln_bak  "$DOTS/kak"                ".config/kak"
+ln_bak  "$DOTS/kak-lsp"            ".config/kak-lsp"
+ln_bak  "$DOTS/jj/50-dots.toml"    ".config/jj/conf.d/50-dots.toml"
+ln_bak  "$DOTS/git/gitconfig"      ".gitconfig"
+ln_bak  "$DOTS/git/dots.gitconfig" ".config/git/conf.d/dots.gitconfig"
+ln_bak  "$DOTSLO/git/gitconfig"    ".config/git/conf.d/dots-local.gitconfig"
