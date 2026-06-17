@@ -636,51 +636,72 @@ hook -once global WinSetOption filetype=diff %{
 # Git Diff Buffer
 # ─────────────────────
 declare-option -hidden str git_backend "git"
-declare-option -hidden str git_revset "HEAD"
+declare-option -hidden str-list git_revset "HEAD"
 
-define-command -hidden -params 1 git-diff-impl %{
+define-command -hidden -params 1..2 git-diff-impl %{
   edit -scratch '*git-diff*'
   set-option buffer filetype 'git-diff'
   evaluate-commands -draft -no-hooks %{
     try %{
       execute-keys -draft "%%s^[^\n].+$<ret>"
       # Select all, replace selection with git diff (without stdin).
-      execute-keys -draft "%%|:|git diff '%arg{1}'<ret>"
+      execute-keys -draft "%%|:|git diff %arg{@}<ret>"
     } catch %{
       # Select all, replace selection with git diff (without stdin).
-      execute-keys -draft "%%d<a-!>git diff '%arg{1}'<ret>ggd"
+      execute-keys -draft "%%d<a-!>git diff %arg{@}<ret>ggd"
     }
   }
 }
 
-define-command -hidden -params 1 jj-diff-impl %{
+define-command -hidden -params 2..4 jj-diff-impl %{
   edit -scratch '*git-diff*'
   set-option buffer filetype 'git-diff'
   evaluate-commands -draft -no-hooks %{
     try %{
       execute-keys -draft "%%s^[^\n].+$<ret>"
       # Select all, replace selection with git diff (without stdin).
-      execute-keys -draft "%%|:|jj diff --git -r '%arg{1}'<ret>"
+      execute-keys -draft "%%|:|jj diff --git %arg{@}<ret>"
     } catch %{
       # Select all, replace selection with git diff (without stdin).
-      execute-keys -draft "%%d<a-!>jj diff --git -r '%arg{1}'<ret>ggd"
+      execute-keys -draft "%%d<a-!>jj diff --git %arg{@}<ret>ggd"
     }
   }
 }
 
-define-command -docstring 'Open current git diff' -params ..1 git-diff %{
+define-command -docstring 'Open current git diff' -params ..2 git-diff %{
   evaluate-commands %sh{
     kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
-    revset="${1:-$kak_opt_git_revset}"
-    if [[ "$kak_opt_git_backend" == "jj" ]]; then
-      if [[ "$revset" == "HEAD" ]]; then
-        revset="@"
-      elif [[ "$revset" == "HEAD^" ]]; then
-        revset="@-"
+    translate_head() {
+      if [[ "$kak_opt_git_backend" == "jj" ]]; then
+        case "$1" in
+          HEAD)  printf "@" ;;
+          HEAD^) printf "@-" ;;
+          *)     printf "%s" "$1" ;;
+        esac
+      else
+        printf "%s" "$1"
       fi
-      printf "jj-diff-impl %s\n" "$(kakquote "$revset")"
+    }
+
+    if [[ $# -eq 0 ]]; then
+      eval "set -- $kak_quoted_opt_git_revset"
+    fi
+
+    arg1=$(kakquote "$(translate_head "${1:-}")")
+    arg2=$(kakquote "$(translate_head "${2:-}")")
+
+    if [[ "$kak_opt_git_backend" == "jj" ]]; then
+      if [[ $# -eq 1 ]]; then
+        printf "jj-diff-impl -r %s\n" "$arg1"
+      elif [[ $# -eq 2 ]]; then
+        printf "jj-diff-impl --from %s --to %s\n" "$arg1" "$arg2"
+      fi
     else
-      printf "git-diff-impl %s\n" "$(kakquote "$revset")"
+      if [[ $# -eq 1 ]]; then
+        printf "git-diff-impl %s\n" "$arg1"
+      elif [[ $# -eq 2 ]]; then
+        printf "git-diff-impl %s %s\n" "$arg1" "$arg2"
+      fi
     fi
   }
 }

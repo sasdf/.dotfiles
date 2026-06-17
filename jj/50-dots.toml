@@ -4,6 +4,23 @@
 default-command = "log"
 editor = "jj-kak --editor"
 
+[templates]
+commit_trailers = '''
+format_signed_off_by_trailer(self)
+++ if(
+  !trailers.contains_key("Change-Id"),
+  format_gerrit_change_id_trailer(self)
+)
+'''
+
 [aliases]
 n = ["new"]
+squ = ["squash"]
+aban = ["abandon"]
+push = ["git", "push"]
+up = ["git", "push"]
+
 kak = ["util", "exec", "--", "jj-kak"]
+tip = ["util", "exec", "--", "jj-tip"]
+adv = ["util", "exec", "--", "jj-advance"]
+advance = ["util", "exec", "--", "jj-advance"]

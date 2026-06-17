@@ -16,7 +16,6 @@ function run_kak () {
   trap '' SIGINT
   set -m # Enable job control
   kak "$@"
-  echo "done" >&2
   exit 0
 }
 
@@ -41,22 +40,30 @@ ROOT="$(jj root)"
 cd "$ROOT"
 
 if [[ "$EDITOR_MODE" -eq "1" ]]; then
-    refs='@'
+    args=( -r @ )
+    revset=( @ )
 elif [[ $# -eq 0 ]]; then
   if [ "$(jj log -r @ -T empty --no-graph --color never)" == "true" ]; then
-    refs='@-'
+    args=( -r @- )
+    revset=( @- )
   else
-    refs='@'
+    args=( -r @ )
+    revset=( @ )
   fi
 elif [[ $# -eq 1 ]]; then
-  refs="$1"
+  args=( -r "$1")
+  revset=( "$(kakquote "$1")" )
   shift
+elif [[ $# -eq 2 ]]; then
+  args=( --from "$1" --to "$2" )
+  revset=( "$(kakquote "$1")" "$(kakquote "$2")" )
+  shift 2
 else
-  echo "Usage: $0 [commit-msg] [refs]" >&2
+  echo "Usage: $0 [commit-msg] [revset]|[from to]" >&2
   exit 1
 fi
 
-mapfile -t diff_files < <(jj diff -r "$refs" --name-only)
+mapfile -t diff_files < <(jj diff "${args[@]}" --name-only)
 files+=( "${diff_files[@]}" )
 
 pinned_args=""
@@ -65,7 +72,7 @@ for p in "${pinned[@]}"; do
 done
 
 commands+=("
-  set-option global git_revset $(kakquote "$refs")
+  set-option global git_revset ${revset[@]}
   git-diff
   genai-set-context true
   arrange-buffers ${pinned_args}

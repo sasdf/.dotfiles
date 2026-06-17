@@ -17,7 +17,6 @@ function run_kak () {
   trap '' SIGINT
   set -m # Enable job control
   kak "$@"
-  echo "done" >&2
   exit 0
 }
 
@@ -44,29 +43,39 @@ cd "$ROOT"
 if [[ "$EDITOR_MODE" -eq "1" || $# -eq 0 ]]; then
   if git diff-index --quiet HEAD --; then
     # No staged or dirty files, likely reword
-    refs='HEAD^'
+    args=( 'HEAD^' )
+    revset=( 'HEAD^' )
+    logset='HEAD^..'
   else
-    refs='HEAD'
+    args=( 'HEAD' )
+    revset=( 'HEAD' )
+    logset='HEAD..'
   fi
 elif [[ $# -eq 1 ]]; then
-  refs="$1"
+  args=( "$1" )
+  revset=( "$(kakquote "$1")" )
+  if [[ "$1" != *".."* ]]; then
+    logset="$1.."
+  else
+    logset="$1"
+  fi
   shift
+elif [[ $# -eq 2 ]]; then
+  args=( "$1" "$2" )
+  revset=( "$(kakquote "$1")" "$(kakquote "$2")" )
+  logset="$1..$2"
+  shift 2
 else
-  echo "Usage: $0 [commit-msg] [refs]" >&2
+  echo "Usage: $0 [commit-msg] [refs]|[from to]" >&2
   exit 1
 fi
 
-mapfile -t diff_files < <(git diff "$refs" --name-only)
+mapfile -t diff_files < <(git diff "${args[@]}" --name-only)
 files+=( "${diff_files[@]}" )
 
 # Include git logs when not in a commit operation
 if [[ "$EDITOR_MODE" -eq "0" ]]; then
-  if [[ "$refs" != *".."* ]]; then
-    log_refs="${refs}.."
-  else
-    log_refs="$refs"
-  fi
-  git log -p "$log_refs" > "$GITDIR/CHANGELOG"
+  git log -p "$logset" > "$GITDIR/CHANGELOG"
 
   if [[ -s "$GITDIR/CHANGELOG" ]]; then
     files+=( "$GITDIR/CHANGELOG" )
@@ -85,7 +94,7 @@ for p in "${pinned[@]}"; do
 done
 
 commands+=("
-  set-option global git_revset $(kakquote "$refs")
+  set-option global git_revset ${revset[@]}
   git-diff
   genai-set-context true
   arrange-buffers ${pinned_args}

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# tmux-pad: Formats numeric tmux session names with leading zeros.
+#
+# usage: tmux-pad [pad_len]
+
+# Get all session names
+sessions=$(tmux list-sessions -F '#S')
+
+# Determine the padding length
+if [ -n "$1" ] && [[ "$1" =~ ^[0-9]+$ ]]; then
+  pad_len="$1"
+else
+  # Find the length of the longest numeric session name
+  max_len=0
+  while read -r session; do
+    if [[ "$session" =~ ^[0-9]+$ ]]; then
+      len=${#session}
+      if (( len > max_len )); then
+        max_len=$len
+      fi
+    fi
+  done <<< "$sessions"
+  pad_len=$max_len
+fi
+
+# If no numeric sessions exist and no padding is specified, do nothing
+if [ "$pad_len" -eq 0 ]; then
+  exit 0
+fi
+
+# Rename the sessions
+while read -r session; do
+  if [[ "$session" =~ ^[0-9]+$ ]]; then
+    padded=$(printf "%0${pad_len}d" "$session")
+    if [ "$session" != "$padded" ]; then
+      echo "Renaming session $session to $padded"
+      tmux rename-session -t "$session" "$padded"
+    fi
+  fi
+done <<< "$sessions"

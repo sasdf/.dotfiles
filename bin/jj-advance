@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# jj-advance: Advance the closest bookmark.
+
+set -euo pipefail
+
+# Check if "-t" or "--to" is present in the arguments
+has_to=false
+for arg in "$@"; do
+  if [[ "$arg" == "-t" || "$arg" == "--to" ]]; then
+    has_to=true
+    break
+  fi
+done
+
+if ! $has_to; then
+  # Check if the current revision (@) is empty
+  # If it is empty, we target @- (the parent revision) instead.
+  if [[ "$(jj log -r @ -T empty --no-graph --color never)" == "true" ]]; then
+    rev="@-"
+  else
+    rev="@"
+  fi
+
+  set -- --to "$rev" "$@"
+fi
+
+exec jj bookmark advance "$@"

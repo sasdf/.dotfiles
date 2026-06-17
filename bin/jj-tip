@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# jj-tip: Create a bookmark at the current revision.
+
+set -euo pipefail
+
+# Check if the current revision (@) is empty
+# If it is empty, we target @- (the parent revision) instead.
+if [[ "$(jj log -r @ -T empty --no-graph --color never)" == "true" ]]; then
+  rev="@-"
+else
+  rev="@"
+fi
+
+# Get the tip change ID
+change_id=$(jj log -r "$rev" --no-graph --color=never -T "change_id.short(8)")
+if [ -z "$change_id" ]; then
+  echo "Error: Could not find current change ID" >&2
+  exit 1
+fi
+
+# Define the bookmark name
+bookmark_name="mjT${change_id}"
+
+# Create the bookmark at the current revision (@)
+jj bookmark create -r "$rev" "$bookmark_name"
+
+echo "Created bookmark: $bookmark_name"
