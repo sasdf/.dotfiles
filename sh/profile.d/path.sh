@@ -7,6 +7,10 @@
 export PATH="$HOME/bin"
 export LD_LIBRARY_PATH="$HOME/lib"
 
+if [ -d "$DOTSLO/bin" ]; then
+    export PATH="$PATH:$DOTSLO/bin"
+fi
+
 # kakoune
 if [ ! -z "$DOTS_PATH_KAKOUNE" ]; then
     export PATH="$PATH:$DOTS_PATH_KAKOUNE/bin"
