@@ -71,7 +71,6 @@ sync_tmp2_main () {
 
 trap : INT
 sync_tmp2_main
-local ret=$?
+ret=$?
 trap - INT
 return $ret
-
