@@ -13,12 +13,22 @@ format_signed_off_by_trailer(self)
 )
 '''
 
+duplicate_description = '''
+concat(
+  description.trim_end(),
+  "\n\n(cherry picked from commit ",
+  commit_id,
+  ")\n"
+)
+'''
+
 [aliases]
 n = ["new"]
 squ = ["squash"]
 aban = ["abandon"]
 push = ["git", "push"]
 up = ["git", "push"]
+dup = ["duplicate"]
 
 kak = ["util", "exec", "--", "jj-kak"]
 tip = ["util", "exec", "--", "jj-tip"]

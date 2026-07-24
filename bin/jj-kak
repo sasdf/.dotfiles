@@ -44,8 +44,8 @@ if [[ "$EDITOR_MODE" -eq "1" ]]; then
     revset=( @ )
 elif [[ $# -eq 0 ]]; then
   if [ "$(jj log -r @ -T empty --no-graph --color never)" == "true" ]; then
-    args=( -r @- )
-    revset=( @- )
+    args=( --from @-- --to @)
+    revset=( @-- @ )
   else
     args=( -r @ )
     revset=( @ )
