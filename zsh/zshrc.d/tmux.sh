@@ -1,6 +1,6 @@
 tmux_auto_refresh() {
   if [[ "${TMUX_REFRESH}" != "n" ]]; then
-    local mux=${HOSTMUX:-$TMUX}
+    local mux=${TMUX:-$HOSTMUX}
     if [[ -n "${mux}" ]]; then
       eval "$(TMUX="${mux}" tmux show-environment -s)"
     fi
