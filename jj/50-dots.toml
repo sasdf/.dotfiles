@@ -1,4 +1,6 @@
 #:schema https://docs.jj-vcs.dev/latest/config-schema.json
+[revset-aliases]
+"tr" = "trunk()"
 
 [ui]
 default-command = "log"
@@ -29,8 +31,13 @@ aban = ["abandon"]
 push = ["git", "push"]
 up = ["git", "push"]
 dup = ["duplicate"]
+gup = ["gerrit", "upload"]
 
 kak = ["util", "exec", "--", "jj-kak"]
 tip = ["util", "exec", "--", "jj-tip"]
 adv = ["util", "exec", "--", "jj-advance"]
 advance = ["util", "exec", "--", "jj-advance"]
+
+[git]
+# Prevent pushing work in progress or anything explicitly labeled "private"
+private-commits = "description('wip:*') | description('private:*')"

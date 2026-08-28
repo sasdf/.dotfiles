@@ -2,3 +2,8 @@
   path = ~/.config/git/conf.d/dots.gitconfig
   path = ~/.config/git/conf.d/dots-local.gitconfig
   path = ~/.config/git/conf.d/local.gitconfig
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
