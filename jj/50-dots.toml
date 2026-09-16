@@ -41,3 +41,6 @@ advance = ["util", "exec", "--", "jj-advance"]
 [git]
 # Prevent pushing work in progress or anything explicitly labeled "private"
 private-commits = "description('wip:*') | description('private:*')"
+
+[snapshot]
+max-new-file-size = 1255007
