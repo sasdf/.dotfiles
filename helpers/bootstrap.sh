@@ -64,6 +64,7 @@ mkdir -p "$DOTSLO" && chmod 700 "$DOTSLO"
 mkdir -p "$DOTSLO/pkg"
 mkdir -p "$DOTSLO/pkg/zsh-custom/plugins"
 mkdir -p "$DOTSLO/pkg/zsh-custom/themes"
+mkdir -p "$HOME/.ssh/sockets/"
 
 if yesno "[?] Do you want to install oh-my-zsh?"; then
     git_update 'https://github.com/ohmyzsh/ohmyzsh.git' "$DOTSLO/pkg/oh-my-zsh"
