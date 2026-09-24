@@ -23,6 +23,11 @@ if [ -z "$TMUX" ] && [ -z "$TERM" ]; then
     export TERM=xterm-256color
 fi
 
+# sshsock proxy
+if [ -S "$HOME/.ssh/agent.proxy" ]; then
+    export SSH_AUTH_SOCK="$HOME/.ssh/agent.proxy"
+fi
+
 
 # .---------------.
 # | Local storage |
